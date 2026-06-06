@@ -1,0 +1,15 @@
+.gradle/
+.kotlin/
+build/
+
+*.class
+*.log
+*.tmp
+
+.idea/
+*.iml
+
+local.properties
+
+MOD使用说明书.md
+MOD测试书.md

@@ -1,0 +1,212 @@
+{
+  "configs": [
+    {
+      "title": "基础设置 / Basics",
+      "config": "lyrics.json",
+      "preferences": [
+        {
+          "key": "ui.language",
+          "type": "list",
+          "title": "界面语言 / Language",
+          "summary": "只影响插件弹出的提示、日志摘要和路径提示；设置页本身是固定文案，不会随语言切换。",
+          "entries": ["简体中文 / Simplified Chinese", "English / 英文"],
+          "entry_values": ["zh-CN", "en-US"],
+          "default_value": "zh-CN"
+        },
+        {
+          "key": "lyrics.enabled",
+          "type": "switch",
+          "title": "启用歌词修正 / Enable Lyrics Fix",
+          "summary": "总开关。关闭后插件不再接管歌词加载、在线查询、保存或写回。",
+          "default_value": true
+        },
+        {
+          "key": "lyrics.load_stage",
+          "type": "list",
+          "title": "歌词接管方式 / Load Strategy",
+          "summary": "决定插件在歌词加载流程中的介入方式。默认“两者都试”更稳；想尽量保留播放器原歌词时可选“缺失时补全”。",
+          "entries": [
+            "插件优先：直接用本地/在线结果替换歌词",
+            "缺失时补全：播放器没歌词时再由插件补上",
+            "两者都试：先尝试插件，之后仍可再次补全"
+          ],
+          "entry_values": ["before", "after", "both"],
+          "default_value": "both"
+        },
+        {
+          "key": "lyrics.show_toast",
+          "type": "switch",
+          "title": "显示提示消息 / Show Toasts",
+          "summary": "开启后，只在加载到歌词、保存 LRC、写回标签等关键动作完成时提示。",
+          "default_value": false
+        }
+      ]
+    },
+    {
+      "title": "歌词来源 / Sources",
+      "config": "lyrics.json",
+      "preferences": [
+        {
+          "key": "lyrics.online_enabled",
+          "type": "switch",
+          "title": "启用在线歌词查询 / Enable Online Lookup",
+          "summary": "本地、覆盖目录和标签里都没歌词时，才尝试从在线来源查询。",
+          "default_value": true
+        },
+        {
+          "key": "lyrics.source_order.rank_1",
+          "type": "list",
+          "title": "歌词源第 1 顺位 / Source Rank 1",
+          "summary": "在线查询时第一个尝试的来源。选“自动”会按默认顺序补齐；重复选择会自动去重。",
+          "entries": ["自动 / Auto", "酷狗 / Kugou", "QQ 音乐 / QQ Music", "网易云 / Netease"],
+          "entry_values": ["auto", "kugou", "qmusic", "netease"],
+          "default_value": "auto"
+        },
+        {
+          "key": "lyrics.source_order.rank_2",
+          "type": "list",
+          "title": "歌词源第 2 顺位 / Source Rank 2",
+          "summary": "第 1 顺位没有可用歌词时，再尝试这里选择的来源。选“自动”会继续使用默认顺序。",
+          "entries": ["自动 / Auto", "酷狗 / Kugou", "QQ 音乐 / QQ Music", "网易云 / Netease"],
+          "entry_values": ["auto", "kugou", "qmusic", "netease"],
+          "default_value": "auto"
+        },
+        {
+          "key": "lyrics.source_order.rank_3",
+          "type": "list",
+          "title": "歌词源第 3 顺位 / Source Rank 3",
+          "summary": "前两个来源都没有结果时，再尝试这里的来源。重复来源会自动跳过。",
+          "entries": ["自动 / Auto", "酷狗 / Kugou", "QQ 音乐 / QQ Music", "网易云 / Netease"],
+          "entry_values": ["auto", "kugou", "qmusic", "netease"],
+          "default_value": "auto"
+        },
+        {
+          "key": "lyrics.source.kugou",
+          "type": "switch",
+          "title": "启用酷狗歌词源 / Enable Kugou",
+          "summary": "开启后允许查询酷狗音乐；关闭后在线查询不会再尝试酷狗。",
+          "default_value": true
+        },
+        {
+          "key": "lyrics.source.qmusic",
+          "type": "switch",
+          "title": "启用 QQ 音乐歌词源 / Enable QQ Music",
+          "summary": "开启后允许查询 QQ 音乐；关闭后在线查询不会再尝试 QQ 音乐。",
+          "default_value": true
+        },
+        {
+          "key": "lyrics.source.netease",
+          "type": "switch",
+          "title": "启用网易云歌词源 / Enable Netease",
+          "summary": "开启后允许查询网易云音乐；关闭后在线查询不会再尝试网易云。",
+          "default_value": true
+        }
+      ]
+    },
+    {
+      "title": "保存与覆盖 / Save & Override",
+      "config": "lyrics.json",
+      "preferences": [
+        {
+          "key": "lyrics.prefer_sidecar",
+          "type": "switch",
+          "title": "优先读取同目录歌词 / Prefer Sidecar Lyrics",
+          "summary": "优先读取歌曲文件旁边、同名的 .lrc 或 .txt，适合自己整理好的歌词文件。",
+          "default_value": true
+        },
+        {
+          "key": "lyrics.prefer_override_folder",
+          "type": "switch",
+          "title": "优先读取覆盖目录 / Prefer Override Folder",
+          "summary": "优先读取插件专用覆盖目录里的歌词，适合集中存放手动修正过的歌词。",
+          "default_value": true
+        },
+        {
+          "key": "lyrics.save_mode",
+          "type": "list",
+          "title": "歌词保存策略 / Save Mode",
+          "summary": "在线查到歌词后的处理方式。“仅加载显示”不改文件；“保存同目录 LRC”会新增歌词文件；“写回歌曲标签”会修改音频文件。",
+          "entries": ["仅加载显示：不改动文件", "保存同目录 LRC：在歌曲旁边生成歌词文件", "写回歌曲标签：会修改音频文件"],
+          "entry_values": ["display_only", "save_lrc", "write_tag"],
+          "default_value": "display_only"
+        },
+        {
+          "key": "lyrics.override_folder_name",
+          "type": "edittext",
+          "title": "覆盖目录名称 / Override Folder Name",
+          "summary": "覆盖目录会创建在插件配置文件旁边；改名后会使用新的目录读取修正歌词。",
+          "default_value": "overrides"
+        },
+        {
+          "type": "button",
+          "title": "复制覆盖目录路径 / Copy Override Path",
+          "summary": "复制覆盖目录的完整路径，方便在资源管理器或聊天中粘贴。",
+          "arrow_type": "none",
+          "on_click": "com.salt.autotagger.spw.SaltAutoTaggerPlugin.copyOverridePath"
+        },
+        {
+          "type": "button",
+          "title": "打开覆盖目录 / Open Override Folder",
+          "summary": "直接打开当前覆盖目录，用来放入或检查手动修正的歌词文件。",
+          "arrow_type": "none",
+          "on_click": "com.salt.autotagger.spw.SaltAutoTaggerPlugin.openOverrideFolder"
+        }
+      ]
+    },
+    {
+      "title": "调试工具 / Debug",
+      "config": "lyrics.json",
+      "preferences": [
+        {
+          "key": "debug.logging.enabled",
+          "type": "switch",
+          "title": "启用调试日志 / Enable Debug Logging",
+          "summary": "排查“为什么没歌词”时开启。会记录本地命中、在线查询、来源结果和保存动作。",
+          "default_value": false
+        },
+        {
+          "key": "debug.source_probe.keyword",
+          "type": "edittext",
+          "title": "检测关键词 / Probe Keyword",
+          "summary": "用于测试歌词源是否可用的搜索词；留空时使用默认测试曲目，不会保存歌词。",
+          "default_value": ""
+        },
+        {
+          "type": "button",
+          "title": "检测歌词源状态 / Probe Lyrics Sources",
+          "summary": "逐个测试当前启用的在线来源，只记录成功、失败和耗时，不会写入歌曲或 LRC。",
+          "arrow_type": "none",
+          "on_click": "com.salt.autotagger.spw.SaltAutoTaggerPlugin.probeSources"
+        },
+        {
+          "type": "button",
+          "title": "查看最近日志 / View Recent Logs",
+          "summary": "弹出最近几条日志摘要；完整日志请使用“复制日志文件路径”后打开查看。",
+          "arrow_type": "none",
+          "on_click": "com.salt.autotagger.spw.SaltAutoTaggerPlugin.showRecentLog"
+        },
+        {
+          "type": "button",
+          "title": "复制日志文件路径 / Copy Log File Path",
+          "summary": "复制完整日志文件路径，方便打开文件或反馈问题时提供日志。",
+          "arrow_type": "none",
+          "on_click": "com.salt.autotagger.spw.SaltAutoTaggerPlugin.copyLogPath"
+        },
+        {
+          "type": "button",
+          "title": "清空调试日志 / Clear Debug Log",
+          "summary": "清空当前日志文件，适合在重新复现问题前使用，便于只查看最新记录。",
+          "arrow_type": "none",
+          "on_click": "com.salt.autotagger.spw.SaltAutoTaggerPlugin.clearLog"
+        },
+        {
+          "type": "button",
+          "title": "插件版本 / Plugin Version",
+          "summary": "当前版本：__PLUGIN_VERSION__",
+          "arrow_type": "none",
+          "on_click": "com.salt.autotagger.spw.SaltAutoTaggerPlugin.showPluginVersion"
+        }
+      ]
+    }
+  ]
+}
