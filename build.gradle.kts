@@ -31,6 +31,7 @@ val pluginClass = "com.salt.autotagger.spw.SaltAutoTaggerPlugin"
 val pluginId = "com.salt.autotagger"
 val pluginVersion = project.version.toString()
 val pluginProvider = "yhxglsa2016"
+val pluginOpenSourceUrl = "https://github.com/yhxglsa2016/Salt-auto-tagger"
 
 tasks.processResources {
     inputs.property("pluginVersion", pluginVersion)
@@ -49,6 +50,7 @@ tasks.named<Jar>("jar") {
         attributes["Plugin-Name"] = "Salt Auto Tagger / 歌词自动补全"
         attributes["Plugin-Version"] = pluginVersion
         attributes["Plugin-Provider"] = pluginProvider
+        attributes["Plugin-Open-Source-Url"] = pluginOpenSourceUrl
         attributes["Plugin-Description"] =
             "Built-in multi-source lyrics loader for Salt Player for Windows / Salt Player for Windows 内置多源歌词补全插件。"
         attributes["Plugin-Has-Config"] = "true"
