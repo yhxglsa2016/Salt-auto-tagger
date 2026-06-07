@@ -1,38 +1,27 @@
 # Implementation Notes
 
-## Scope of v0.1.0
+## Current Scope
 
-This repository implements the most reliable first milestone for `Salt Auto Tagger`:
+Salt Auto Tagger is a Salt Player for Windows plugin focused on lyrics loading, completion, saving, and diagnostics.
 
-- lyrics correction
-- local LRC fallback
-- optional remote lyrics lookup
+Current capabilities:
 
-It does not yet write corrected lyrics back into audio tags.
+- Load local sidecar lyrics from same-folder `.lrc` or `.txt` files.
+- Load manually corrected lyrics from the plugin override folder.
+- Read existing embedded lyrics tags when available.
+- Query online lyrics from Kugou, QQ Music, and Netease.
+- Save online lyrics as same-folder LRC files, or write lyrics back to supported audio tags when the tag is missing lyrics.
+- Record structured debug logs using `event | key=value` lines.
+- Publish releases through GitHub Actions from strict `v<version>` tags.
 
-## Why Tag Writing Is Not In v0.1.0
+## Compatibility Notes
 
-The current `spw-workshop-api` exposes playback lifecycle and lyrics loading hooks, but it does not expose a host-side API for mutating track tags.
+- The plugin keeps one runtime config file, `lyrics.json`, so existing user settings continue to load.
+- Existing config keys and callback names are treated as public compatibility surface.
+- Online lyrics source APIs are external and may change; failures should be diagnosed through debug logs before changing user-facing behavior.
 
-That means a full "edit title / album / artist / lyrics / cover directly from SPW" mod will likely need one of these follow-up routes:
+## Development Priorities
 
-1. embed a local tag-writing library inside the mod
-2. call an external local helper process
-3. extend the SPW workshop API itself
-
-## Recommended Next Steps
-
-1. Keep this mod focused on lyrics replacement first.
-2. Expose a tiny lyrics-repair endpoint from your existing API project.
-3. After the lyrics workflow is stable, add a second module for tag write-back.
-
-## Suggested API Response
-
-Keep the first API as plain text:
-
-```text
-[00:00.00]Corrected lyric line
-[00:05.00]Second line
-```
-
-That avoids adding JSON parsing dependencies inside the mod and makes debugging easier.
+1. Keep runtime behavior stable and observable.
+2. Add regression tests around pure logic before changing search, matching, source order, or save behavior.
+3. Validate release artifacts before upload so Manifest fields, version, and Release Notes stay consistent.

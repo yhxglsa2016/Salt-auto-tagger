@@ -20,12 +20,16 @@ object LyricsResolver {
             "resolve_start | title=${DebugLog.field(mediaItem.title)} | artist=${DebugLog.field(mediaItem.artist)} | path=${DebugLog.field(path)}"
         )
         cache[path]?.let {
-            DebugLog.info("cache_hit | title=${mediaItem.title} | path=$path")
+            DebugLog.info(
+                "cache_hit | title=${DebugLog.field(mediaItem.title)} | artist=${DebugLog.field(mediaItem.artist)} | path=${DebugLog.field(path)}"
+            )
             return it
         }
 
         resolveLocal(mediaItem)?.let {
-            DebugLog.info("local_hit | origin=${it.origin} | title=${mediaItem.title} | path=$path")
+            DebugLog.info(
+                "local_hit | origin=${it.origin} | title=${DebugLog.field(mediaItem.title)} | artist=${DebugLog.field(mediaItem.artist)} | path=${DebugLog.field(path)}"
+            )
             cache[path] = it
             failedOnlineLookups.remove(path)
             return it
@@ -33,7 +37,9 @@ object LyricsResolver {
 
         val settings = SaltAutoTaggerRuntime.settings
         if (!settings.onlineEnabled || settings.enabledSourceOrder().isEmpty()) {
-            DebugLog.warn("online_skipped | reason=disabled_or_no_sources | onlineEnabled=${settings.onlineEnabled} | enabledSources=${settings.enabledSourceOrder().size} | title=${mediaItem.title}")
+            DebugLog.warn(
+                "online_skipped | reason=disabled_or_no_sources | onlineEnabled=${settings.onlineEnabled} | enabledSources=${settings.enabledSourceOrder().size} | title=${DebugLog.field(mediaItem.title)} | artist=${DebugLog.field(mediaItem.artist)} | path=${DebugLog.field(path)}"
+            )
             return null
         }
 
@@ -46,7 +52,9 @@ object LyricsResolver {
         )
 
         if (shouldSkipRecentFailedLookup(path)) {
-            DebugLog.info("online_skipped | reason=recent_failed_lookup | title=${query.title} | path=$path")
+            DebugLog.info(
+                "online_skipped | reason=recent_failed_lookup | title=${DebugLog.field(query.title)} | artist=${DebugLog.field(query.artist)} | path=${DebugLog.field(path)}"
+            )
             return null
         }
 
@@ -57,7 +65,7 @@ object LyricsResolver {
         val online = onlineResolver.resolve(query)?.let { result ->
             persistOnlineLyrics(query, result)
             DebugLog.info(
-                "online_success | source=${result.sourceId} | candidateTitle=${DebugLog.field(result.candidate.title)} | candidateArtist=${DebugLog.field(result.candidate.artist)} | title=${DebugLog.field(query.title)}"
+                "online_success | source=${result.sourceId} | candidateTitle=${DebugLog.field(result.candidate.title)} | candidateArtist=${DebugLog.field(result.candidate.artist)} | title=${DebugLog.field(query.title)} | artist=${DebugLog.field(query.artist)} | path=${DebugLog.field(query.filePath)}"
             )
             ResolvedLyrics(
                 lyrics = result.lyrics,
@@ -92,34 +100,34 @@ object LyricsResolver {
         val settings = SaltAutoTaggerRuntime.settings
 
         if (settings.preferSidecar) {
-            DebugLog.info("local_start | type=sidecar | title=${mediaItem.title} | path=${mediaItem.path}")
+            DebugLog.info("local_start | type=sidecar | title=${DebugLog.field(mediaItem.title)} | artist=${DebugLog.field(mediaItem.artist)} | path=${DebugLog.field(mediaItem.path)}")
             loadSidecarLyrics(mediaItem.path)?.let {
-                DebugLog.info("local_hit | type=sidecar | title=${mediaItem.title} | path=${mediaItem.path}")
+                DebugLog.info("local_hit | type=sidecar | title=${DebugLog.field(mediaItem.title)} | artist=${DebugLog.field(mediaItem.artist)} | path=${DebugLog.field(mediaItem.path)}")
                 return ResolvedLyrics(it, LyricsOrigin.Sidecar, null)
             }
-            DebugLog.info("local_miss | type=sidecar | title=${mediaItem.title} | path=${mediaItem.path}")
+            DebugLog.info("local_miss | type=sidecar | title=${DebugLog.field(mediaItem.title)} | artist=${DebugLog.field(mediaItem.artist)} | path=${DebugLog.field(mediaItem.path)}")
         } else {
             DebugLog.info("local_skipped | type=sidecar | reason=disabled")
         }
 
         if (settings.preferOverrideFolder) {
-            DebugLog.info("local_start | type=override | title=${mediaItem.title} | path=${mediaItem.path}")
+            DebugLog.info("local_start | type=override | title=${DebugLog.field(mediaItem.title)} | artist=${DebugLog.field(mediaItem.artist)} | path=${DebugLog.field(mediaItem.path)}")
             loadOverrideLyrics(mediaItem)?.let {
-                DebugLog.info("local_hit | type=override | title=${mediaItem.title} | path=${mediaItem.path}")
+                DebugLog.info("local_hit | type=override | title=${DebugLog.field(mediaItem.title)} | artist=${DebugLog.field(mediaItem.artist)} | path=${DebugLog.field(mediaItem.path)}")
                 return ResolvedLyrics(it, LyricsOrigin.Override, null)
             }
-            DebugLog.info("local_miss | type=override | title=${mediaItem.title} | path=${mediaItem.path}")
+            DebugLog.info("local_miss | type=override | title=${DebugLog.field(mediaItem.title)} | artist=${DebugLog.field(mediaItem.artist)} | path=${DebugLog.field(mediaItem.path)}")
         } else {
             DebugLog.info("local_skipped | type=override | reason=disabled")
         }
 
-        DebugLog.info("local_start | type=embedded_tag | title=${mediaItem.title} | path=${mediaItem.path}")
+        DebugLog.info("local_start | type=embedded_tag | title=${DebugLog.field(mediaItem.title)} | artist=${DebugLog.field(mediaItem.artist)} | path=${DebugLog.field(mediaItem.path)}")
         EmbeddedLyricsReader.read(mediaItem.path)?.let {
-            DebugLog.info("local_hit | type=embedded_tag | title=${mediaItem.title} | path=${mediaItem.path}")
+            DebugLog.info("local_hit | type=embedded_tag | title=${DebugLog.field(mediaItem.title)} | artist=${DebugLog.field(mediaItem.artist)} | path=${DebugLog.field(mediaItem.path)}")
             return ResolvedLyrics(it, LyricsOrigin.EmbeddedTag, null)
         }
-        DebugLog.info("local_miss | type=embedded_tag | title=${mediaItem.title} | path=${mediaItem.path}")
-        DebugLog.warn("local_failed | reason=no_local_lyrics | title=${mediaItem.title} | path=${mediaItem.path}")
+        DebugLog.info("local_miss | type=embedded_tag | title=${DebugLog.field(mediaItem.title)} | artist=${DebugLog.field(mediaItem.artist)} | path=${DebugLog.field(mediaItem.path)}")
+        DebugLog.warn("local_failed | reason=no_local_lyrics | title=${DebugLog.field(mediaItem.title)} | artist=${DebugLog.field(mediaItem.artist)} | path=${DebugLog.field(mediaItem.path)}")
 
         return null
     }

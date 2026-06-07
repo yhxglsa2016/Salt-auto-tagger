@@ -19,13 +19,26 @@ object SourceOrderSupport {
                 .lowercase()
         }
 
-        val hasRankConfiguration = rankedValues.any { it != "auto" }
+        return resolveSourceOrderValues(
+            rankedValues = rankedValues,
+            legacyValue = helper.get("lyrics.source_order", "default"),
+            defaultSourceOrder = defaultSourceOrder
+        )
+    }
+
+    internal fun resolveSourceOrderValues(
+        rankedValues: List<String>,
+        legacyValue: String,
+        defaultSourceOrder: List<LyricsSourceId>
+    ): List<LyricsSourceId> {
+        val normalizedRanks = rankedValues.map { it.trim().lowercase() }
+        val hasRankConfiguration = normalizedRanks.any { it != "auto" }
         if (!hasRankConfiguration) {
-            return resolveLegacySourceOrder(helper, defaultSourceOrder)
+            return resolveLegacySourceOrder(legacyValue, defaultSourceOrder)
         }
 
         val resolved = linkedSetOf<LyricsSourceId>()
-        rankedValues.forEach { value ->
+        normalizedRanks.forEach { value ->
             val sourceId = sourceConfigValues[value] ?: return@forEach
             resolved.add(sourceId)
         }
@@ -34,10 +47,10 @@ object SourceOrderSupport {
     }
 
     private fun resolveLegacySourceOrder(
-        helper: com.xuncorp.spw.workshop.api.config.ConfigHelper,
+        value: String,
         defaultSourceOrder: List<LyricsSourceId>
     ): List<LyricsSourceId> {
-        return when (helper.get("lyrics.source_order", "default").trim().lowercase()) {
+        return when (value.trim().lowercase()) {
             "default" -> defaultSourceOrder
             else -> defaultSourceOrder
         }

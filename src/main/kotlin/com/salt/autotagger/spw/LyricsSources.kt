@@ -120,7 +120,7 @@ class OnlineLyricsResolver(
         Duration.ofNanos(System.nanoTime() - startedAtNanos).toMillis()
 }
 
-private object SearchTerms {
+internal object SearchTerms {
     private val trailingNoise = Regex(
         "\\s*[-_\\s]*(无数据|unknown|n/?a|live|ver\\.?|version|inst\\.?|instrumental|伴奏)\\s*$",
         RegexOption.IGNORE_CASE

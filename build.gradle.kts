@@ -25,6 +25,9 @@ dependencies {
 
     compileOnly("com.github.Moriafly:spw-workshop-api:0.1.0-dev14")
     kapt("com.github.Moriafly:spw-workshop-api:0.1.0-dev14")
+
+    testImplementation(kotlin("test-junit5"))
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
 }
 
 val pluginClass = "com.salt.autotagger.spw.SaltAutoTaggerPlugin"
@@ -55,6 +58,10 @@ tasks.named<Jar>("jar") {
             "Built-in multi-source lyrics loader for Salt Player for Windows / Salt Player for Windows 内置多源歌词补全插件。"
         attributes["Plugin-Has-Config"] = "true"
     }
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 tasks.register<Jar>("plugin") {

@@ -1,0 +1,154 @@
+name: Release Plugin
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Validate tag version
+        id: version
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          if ($tag -notmatch '^v(\d+\.\d+\.\d+)$') {
+            throw "Tag '$tag' is not a strict semantic version tag like v0.1.2."
+          }
+
+          $tagVersion = $Matches[1]
+          $buildFile = Join-Path $env:GITHUB_WORKSPACE "build.gradle.kts"
+          $buildText = Get-Content -LiteralPath $buildFile -Raw -Encoding UTF8
+          $versionMatch = [regex]::Match($buildText, '(?m)^version\s*=\s*"([^"]+)"')
+
+          if (-not $versionMatch.Success) {
+            throw "Could not find version declaration in build.gradle.kts."
+          }
+
+          $gradleVersion = $versionMatch.Groups[1].Value
+          if ($gradleVersion -ne $tagVersion) {
+            throw "Tag version '$tagVersion' does not match build.gradle.kts version '$gradleVersion'."
+          }
+
+          $assetName = "plugin-com.salt.autotagger-$tagVersion.zip"
+
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+          "version=$tagVersion" >> $env:GITHUB_OUTPUT
+          "asset_name=$assetName" >> $env:GITHUB_OUTPUT
+
+      - name: Build plugin package
+        shell: pwsh
+        run: .\gradlew.bat plugin
+
+      - name: Validate asset and render release notes
+        id: notes
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $assetName = "${{ steps.version.outputs.asset_name }}"
+          $assetPath = Join-Path $env:GITHUB_WORKSPACE "build\libs\$assetName"
+
+          if (-not (Test-Path -LiteralPath $assetPath)) {
+            throw "Expected release asset not found: $assetPath"
+          }
+
+          $templatePath = Join-Path $env:GITHUB_WORKSPACE "release-notes-template.md"
+          if (-not (Test-Path -LiteralPath $templatePath)) {
+            throw "Release notes template not found: $templatePath"
+          }
+
+          $notes = Get-Content -LiteralPath $templatePath -Raw -Encoding UTF8
+          $notes = $notes.Replace("{{VERSION}}", $version)
+          $notes = $notes.Replace("{{ASSET_NAME}}", $assetName)
+          if ($notes -match '\{\{VERSION\}\}|\{\{ASSET_NAME\}\}') {
+            throw "Release notes still contain unreplaced placeholders."
+          }
+
+          $notesPath = Join-Path $env:RUNNER_TEMP "release-notes.md"
+          Set-Content -LiteralPath $notesPath -Value $notes -Encoding UTF8
+
+          "asset_path=$assetPath" >> $env:GITHUB_OUTPUT
+          "notes_path=$notesPath" >> $env:GITHUB_OUTPUT
+
+      - name: Validate plugin manifest
+        shell: pwsh
+        run: |
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+          $version = "${{ steps.version.outputs.version }}"
+          $assetPath = "${{ steps.notes.outputs.asset_path }}"
+          $zip = [System.IO.Compression.ZipFile]::OpenRead($assetPath)
+          try {
+            $entry = $zip.Entries | Where-Object { $_.FullName -eq "classes/META-INF/MANIFEST.MF" } | Select-Object -First 1
+            if ($null -eq $entry) {
+              throw "Manifest not found in release asset."
+            }
+
+            $reader = New-Object System.IO.StreamReader($entry.Open(), [System.Text.Encoding]::UTF8)
+            try {
+              $manifest = $reader.ReadToEnd()
+            } finally {
+              $reader.Dispose()
+            }
+
+            $expected = @{
+              "Plugin-Id" = "com.salt.autotagger"
+              "Plugin-Name" = "Salt Auto Tagger / 歌词自动补全"
+              "Plugin-Version" = $version
+              "Plugin-Provider" = "yhxglsa2016"
+              "Plugin-Open-Source-Url" = "https://github.com/yhxglsa2016/Salt-auto-tagger"
+            }
+
+            foreach ($item in $expected.GetEnumerator()) {
+              $line = "$($item.Key): $($item.Value)"
+              if (-not $manifest.Contains($line)) {
+                throw "Manifest field mismatch or missing: $line"
+              }
+            }
+          } finally {
+            $zip.Dispose()
+          }
+
+      - name: Create or update GitHub release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          $tag = "${{ steps.version.outputs.tag }}"
+          $version = "${{ steps.version.outputs.version }}"
+          $assetPath = "${{ steps.notes.outputs.asset_path }}"
+          $notesPath = "${{ steps.notes.outputs.notes_path }}"
+          $title = "Salt Auto Tagger v$version"
+
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release edit $tag --title $title --notes-file $notesPath
+            if ($LASTEXITCODE -ne 0) {
+              throw "Failed to update release metadata for $tag."
+            }
+          } else {
+            gh release create $tag --title $title --notes-file $notesPath
+            if ($LASTEXITCODE -ne 0) {
+              throw "Failed to create release for $tag."
+            }
+          }
+
+          gh release upload $tag $assetPath --clobber
+          if ($LASTEXITCODE -ne 0) {
+            throw "Failed to upload release asset for $tag."
+          }
