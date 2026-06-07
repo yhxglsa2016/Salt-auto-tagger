@@ -1,4 +1,5 @@
-name: Release Plugin
+name: 发布插件
+run-name: 发布插件：${{ github.ref_name }}
 
 on:
   push:
@@ -13,16 +14,16 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Check out repository
+      - name: 检出仓库
         uses: actions/checkout@v4
 
-      - name: Set up Java 21
+      - name: 设置 Java 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "21"
 
-      - name: Validate tag version
+      - name: 校验标签版本
         id: version
         shell: pwsh
         run: |
@@ -51,11 +52,11 @@ jobs:
           "version=$tagVersion" >> $env:GITHUB_OUTPUT
           "asset_name=$assetName" >> $env:GITHUB_OUTPUT
 
-      - name: Build plugin package
+      - name: 构建插件包
         shell: pwsh
         run: .\gradlew.bat plugin
 
-      - name: Validate asset and render release notes
+      - name: 校验产物并生成发布说明
         id: notes
         shell: pwsh
         run: |
@@ -85,7 +86,7 @@ jobs:
           "asset_path=$assetPath" >> $env:GITHUB_OUTPUT
           "notes_path=$notesPath" >> $env:GITHUB_OUTPUT
 
-      - name: Validate plugin manifest
+      - name: 校验插件清单
         shell: pwsh
         run: |
           Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -124,7 +125,7 @@ jobs:
             $zip.Dispose()
           }
 
-      - name: Create or update GitHub release
+      - name: 创建或更新 GitHub Release
         env:
           GITHUB_TOKEN: ${{ github.token }}
         shell: pwsh
